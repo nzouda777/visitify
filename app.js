@@ -14,8 +14,13 @@ const PATHS = [
 ];
 
 const TOTAL_VISITS = 20;      // nombre de sessions à simuler
-const MIN_DELAY_BETWEEN_PAGES = 5000; // ms
+const MIN_DELAY_BETWEEN_PAGES = 5000; // ms (Base)
 const MAX_DELAY_BETWEEN_PAGES = 12000;
+
+// ⚡️ VISITES RAPIDES (heures de pointe)
+const PEAK_MIN_DELAY = 1000;
+const PEAK_MAX_DELAY = 3000;
+
 // Mot de passe de la boutique (page protégée)
 const PASSWORD = "1";
 // ---------------------------------------
@@ -141,6 +146,41 @@ async function tryAddToCart(page) {
   }
 }
 
+// 🕒 Check l'heure et renvoie les delays appropriés (ou dort si c'est la nuit)
+async function checkTimeAndGetDelay() {
+  while (true) {
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    // ⛔️ 00h - 06h : PAUSE
+    if (currentHour >= 0 && currentHour < 6) {
+      console.log(`\n😴 Il est ${currentHour}h. Pause nuit jusqu'à 6h...`);
+      // Calcul du temps restant jusqu'à 06:00
+      const target = new Date(now);
+      target.setHours(6, 0, 0, 0);
+      if (target <= now) target.setDate(target.getDate() + 1); // cas limite
+
+      const msToWait = target.getTime() - now.getTime();
+      console.log(`(Attente de ${(msToWait / 1000 / 60).toFixed(1)} minutes)`);
+
+      await sleep(msToWait);
+      console.log("\n☀️ Bonjour ! Reprise des visites.");
+      continue; // on re-check l'heure après le réveil
+    }
+
+    // 🚀 11h-13h OU 16h-17h : MODE RAPIDE
+    // Note: 13h exclu (donc 11h00 -> 12h59). 17h exclu (16h00 -> 16h59).
+    const isPeakTime = (currentHour >= 11 && currentHour < 13) || (currentHour >= 16 && currentHour < 17);
+
+    if (isPeakTime) {
+      return { min: PEAK_MIN_DELAY, max: PEAK_MAX_DELAY, label: "🚀 PEAK" };
+    }
+
+    // 🚶 MODE NORMAL
+    return { min: MIN_DELAY_BETWEEN_PAGES, max: MAX_DELAY_BETWEEN_PAGES, label: "🚶 NORMAL" };
+  }
+}
+
 async function simulateVisit(browser, index) {
   const ua = randomUserAgent();
   const viewport = randomViewport();
@@ -193,11 +233,21 @@ async function simulateVisit(browser, index) {
   });
 
   for (let i = 0; i < TOTAL_VISITS; i++) {
+    // 1. On check l'heure AVANT la visite pour savoir si on attend ou pas
+    //    (Techniquement on pourrait le faire après, mais c'est bien de vérifier avant de lancer)
+    //    Ici on l'utilise surtout pour déterminer le délai APRES la visite, 
+    //    mais on veut aussi bloquer le lancement si c'est la nuit.
+    const timeConfig = await checkTimeAndGetDelay();
+
     await simulateVisit(browser, i);
 
-    // délai entre les visites (comme si un nouvel utilisateur arrivait)
-    const delay = randomBetween(MIN_DELAY_BETWEEN_PAGES, MAX_DELAY_BETWEEN_PAGES);
-    console.log(`⏱ Pause avant prochaine visite : ~${Math.round(delay / 1000)}s`);
+    // 2. Pause APRES la visite selon le mode (Peak ou Normal) calculé
+    //    On re-vérifie l'heure pour le délai ? Ou on garde celle du début de visite ?
+    //    Allons au plus simple : on re-check pour le délai d'attente.
+    const delayConfig = await checkTimeAndGetDelay();
+
+    const delay = randomBetween(delayConfig.min, delayConfig.max);
+    console.log(`⏱ [${delayConfig.label}] Pause avant prochaine visite : ~${Math.round(delay / 1000)}s`);
     await sleep(delay);
   }
 
