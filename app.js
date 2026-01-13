@@ -2,7 +2,7 @@
 // Petit lab pour simuler des visites "humaines" sur une boutique Shopify
 
 const { chromium } = require("playwright");
-
+const { spawn } = require("child_process");
 // 🔧 CONFIG À ADAPTER --------------------
 const BASE_URL = "https://firstmillionever.myshopify.com"; // <= remplace par ton domaine
 const PATHS = [
@@ -13,13 +13,19 @@ const PATHS = [
   // "/products/yyy",
 ];
 
-const TOTAL_VISITS = 20;      // nombre de sessions à simuler
-const MIN_DELAY_BETWEEN_PAGES = 5000; // ms (Base)
-const MAX_DELAY_BETWEEN_PAGES = 12000;
+const TOTAL_VISITS = 15000;      // nombre de sessions à simuler
+const MIN_DELAY_BETWEEN_PAGES = 3000; // ms (Base)
+const MAX_DELAY_BETWEEN_PAGES = 7000;
 
 // ⚡️ VISITES RAPIDES (heures de pointe)
 const PEAK_MIN_DELAY = 1000;
 const PEAK_MAX_DELAY = 3000;
+
+// 🎲 VISITES SIMULTANÉES (par lot)
+const MIN_CONCURRENT_VISITS = 1;  // minimum de visites simultanées par lot
+const MAX_CONCURRENT_VISITS = 8;  // maximum de visites simultanées par lot
+const DELAY_BETWEEN_BATCHES_MIN = 3000;  // délai minimum entre les lots (ms)
+const DELAY_BETWEEN_BATCHES_MAX = 15000;  // délai maximum entre les lots (ms)
 
 // Mot de passe de la boutique (page protégée)
 const PASSWORD = "1";
@@ -153,7 +159,7 @@ async function checkTimeAndGetDelay() {
     const currentHour = now.getHours();
 
     // ⛔️ 00h - 06h : PAUSE
-    if (currentHour >= 0 && currentHour < 6) {
+    if (currentHour == 22 && currentHour < 2) {
       console.log(`\n😴 Il est ${currentHour}h. Pause nuit jusqu'à 6h...`);
       // Calcul du temps restant jusqu'à 06:00
       const target = new Date(now);
@@ -173,11 +179,18 @@ async function checkTimeAndGetDelay() {
     const isPeakTime = (currentHour >= 11 && currentHour < 13) || (currentHour >= 16 && currentHour < 17);
 
     if (isPeakTime) {
-      return { min: PEAK_MIN_DELAY, max: PEAK_MAX_DELAY, label: "🚀 PEAK" };
+      // on lance deux autres instances d'execution de app.js en meme temps
+      // const child1 = spawn('node', ['app.js']);
+      // const child2 = spawn('node', ['app.js']);
+      return { min: PEAK_MIN_DELAY, max: PEAK_MAX_DELAY, label: "🚀 PEAK", isPeakTime: true };
     }
 
     // 🚶 MODE NORMAL
-    return { min: MIN_DELAY_BETWEEN_PAGES, max: MAX_DELAY_BETWEEN_PAGES, label: "🚶 NORMAL" };
+    // arreter les deux instances
+    // child1.kill(); 
+    // child2.kill();
+    return { min: MIN_DELAY_BETWEEN_PAGES, max: MAX_DELAY_BETWEEN_PAGES, label: "🚶 NORMAL", isPeakTime: false };
+
   }
 }
 
@@ -193,37 +206,45 @@ async function simulateVisit(browser, index) {
 
   const page = await context.newPage();
 
-  console.log(`\n=== VISITE #${index + 1} ===`);
-  console.log("UA:", ua);
-  console.log("Viewport:", viewport);
+  try {
+    console.log(`\n=== VISITE #${index + 1} ===`);
+    console.log("UA:", ua);
+    console.log("Viewport:", viewport);
 
-  // 1️⃣ Home
-  const homeUrl = BASE_URL + "/";
-  console.log("➡️ Home :", homeUrl);
-  await page.goto(homeUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
-  await bypassPassword(page); // 👈 passe la page mot de passe si présente
-  await sleep(randomBetween(2000, 4000));
-  await humanScroll(page);
-  await sleep(randomBetween(1500, 3000));
+    // 1️⃣ Home
+    const homeUrl = BASE_URL + "/";
+    console.log("➡️ Home :", homeUrl);
+    await page.goto(homeUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await bypassPassword(page); // 👈 passe la page mot de passe si présente
+    await sleep(randomBetween(2000, 4000));
+    await humanScroll(page);
+    await sleep(randomBetween(1500, 3000));
 
-  // 2️⃣ Une autre page (collection / PDP)
-  const path = PATHS[Math.floor(Math.random() * PATHS.length)];
-  const targetUrl = BASE_URL.replace(/\/+$/, "") + path;
-  console.log("➡️ Page suivante :", targetUrl);
-  await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
-  await bypassPassword(page); // 👈 au cas où tu retombes dessus
-  await sleep(randomBetween(2000, 5000));
-  await humanScroll(page);
+    // 2️⃣ Une autre page (collection / PDP)
+    const path = PATHS[Math.floor(Math.random() * PATHS.length)];
+    const targetUrl = BASE_URL.replace(/\/+$/, "") + path;
+    console.log("➡️ Page suivante :", targetUrl);
+    await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await bypassPassword(page); // 👈 au cas où tu retombes dessus
+    await sleep(randomBetween(2000, 5000));
+    await humanScroll(page);
 
-  // Si c'est une PDP, on tente un add-to-cart
-  if (path.includes("/products/")) {
-    await tryAddToCart(page);
+    // Si c'est une PDP, on tente un add-to-cart
+    if (path.includes("/products/")) {
+      await tryAddToCart(page);
+    }
+
+    // petite pause fin de session
+    await sleep(randomBetween(2000, 4000));
+
+    console.log(`✅ Visite #${index + 1} terminée avec succès`);
+  } catch (error) {
+    console.log(`⚠️ Erreur lors de la visite #${index + 1} : ${error.message}`);
+    console.log(`🔄 Cette visite sera ignorée, passage à la suivante...`);
+  } finally {
+    // Toujours fermer le contexte, même en cas d'erreur
+    await context.close();
   }
-
-  // petite pause fin de session
-  await sleep(randomBetween(2000, 4000));
-
-  await context.close();
 }
 
 (async () => {
@@ -232,25 +253,48 @@ async function simulateVisit(browser, index) {
     slowMo: 0,
   });
 
-  for (let i = 0; i < TOTAL_VISITS; i++) {
-    // 1. On check l'heure AVANT la visite pour savoir si on attend ou pas
-    //    (Techniquement on pourrait le faire après, mais c'est bien de vérifier avant de lancer)
-    //    Ici on l'utilise surtout pour déterminer le délai APRES la visite, 
-    //    mais on veut aussi bloquer le lancement si c'est la nuit.
+  let totalCompleted = 0;
+  let batchNumber = 0;
+
+  while (totalCompleted < TOTAL_VISITS) {
+    // 1. Vérifier l'heure (pause si nuit, déterminer le mode)
     const timeConfig = await checkTimeAndGetDelay();
 
-    await simulateVisit(browser, i);
+    // 2. Déterminer combien de visites simultanées pour ce lot
+    // Pendant les heures de pointe, on multiplie par 3 le nombre de visites simultanées
+    const peakMultiplier = timeConfig.isPeakTime ? 3 : 1;
+    const minConcurrent = MIN_CONCURRENT_VISITS * peakMultiplier;
+    const maxConcurrent = MAX_CONCURRENT_VISITS * peakMultiplier;
 
-    // 2. Pause APRES la visite selon le mode (Peak ou Normal) calculé
-    //    On re-vérifie l'heure pour le délai ? Ou on garde celle du début de visite ?
-    //    Allons au plus simple : on re-check pour le délai d'attente.
-    const delayConfig = await checkTimeAndGetDelay();
+    const remainingVisits = TOTAL_VISITS - totalCompleted;
+    const maxBatchSize = Math.min(remainingVisits, maxConcurrent);
+    const minBatchSize = Math.min(minConcurrent, maxBatchSize);
+    const batchSize = Math.floor(randomBetween(minBatchSize, maxBatchSize + 1));
 
-    const delay = randomBetween(delayConfig.min, delayConfig.max);
-    console.log(`⏱ [${delayConfig.label}] Pause avant prochaine visite : ~${Math.round(delay / 1000)}s`);
-    await sleep(delay);
+    batchNumber++;
+    console.log(`\n🎲 === LOT #${batchNumber} : ${batchSize} visites simultanées [${timeConfig.label}] ===`);
+
+    // 3. Lancer toutes les visites du lot en parallèle
+    const visitPromises = [];
+    for (let i = 0; i < batchSize; i++) {
+      const visitIndex = totalCompleted + i;
+      visitPromises.push(simulateVisit(browser, visitIndex));
+    }
+
+    // 4. Attendre que toutes les visites du lot soient terminées
+    await Promise.all(visitPromises);
+    totalCompleted += batchSize;
+
+    console.log(`\n✅ Lot #${batchNumber} terminé (${totalCompleted}/${TOTAL_VISITS} visites complétées)`);
+
+    // 5. Pause entre les lots (sauf si c'est le dernier)
+    if (totalCompleted < TOTAL_VISITS) {
+      const batchDelay = randomBetween(DELAY_BETWEEN_BATCHES_MIN, DELAY_BETWEEN_BATCHES_MAX);
+      console.log(`⏱ Pause avant le prochain lot : ~${Math.round(batchDelay / 1000)}s\n`);
+      await sleep(batchDelay);
+    }
   }
 
   await browser.close();
-  console.log("\n✅ Terminé.");
+  console.log("\n✅ Toutes les visites sont terminées.");
 })();
