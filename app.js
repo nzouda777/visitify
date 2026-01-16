@@ -14,18 +14,18 @@ const PATHS = [
 ];
 
 const TOTAL_VISITS = 15000;      // nombre de sessions à simuler
-const MIN_DELAY_BETWEEN_PAGES = 3000; // ms (Base)
-const MAX_DELAY_BETWEEN_PAGES = 7000;
+const MIN_DELAY_BETWEEN_PAGES = 5000; // ms (Base)
+const MAX_DELAY_BETWEEN_PAGES = 20000
 
 // ⚡️ VISITES RAPIDES (heures de pointe)
-const PEAK_MIN_DELAY = 1000;
-const PEAK_MAX_DELAY = 3000;
+const PEAK_MIN_DELAY = 5000;
+const PEAK_MAX_DELAY = 100000;
 
 // 🎲 VISITES SIMULTANÉES (par lot)
 const MIN_CONCURRENT_VISITS = 1;  // minimum de visites simultanées par lot
 const MAX_CONCURRENT_VISITS = 8;  // maximum de visites simultanées par lot
-const DELAY_BETWEEN_BATCHES_MIN = 3000;  // délai minimum entre les lots (ms)
-const DELAY_BETWEEN_BATCHES_MAX = 15000;  // délai maximum entre les lots (ms)
+const DELAY_BETWEEN_BATCHES_MIN = 100000;  // délai minimum entre les lots (ms)
+const DELAY_BETWEEN_BATCHES_MAX = 500000;  // délai maximum entre les lots (ms)
 
 // Mot de passe de la boutique (page protégée)
 const PASSWORD = "1";
