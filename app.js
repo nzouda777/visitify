@@ -4,7 +4,7 @@
 const { chromium } = require("playwright");
 const { spawn } = require("child_process");
 // 🔧 CONFIG À ADAPTER --------------------
-const BASE_URL = "https://firstmillionever.myshopify.com"; // <= remplace par ton domaine
+const BASE_URL = "https://luneaz.myshopify.com"; // <= remplace par ton domaine
 const PATHS = [
   "/", // home
   "/products/pull-lutin-noel", // exemple PDP
@@ -13,19 +13,19 @@ const PATHS = [
   // "/products/yyy",
 ];
 
-const TOTAL_VISITS = 15000;      // nombre de sessions à simuler
-const MIN_DELAY_BETWEEN_PAGES = 5000; // ms (Base)
-const MAX_DELAY_BETWEEN_PAGES = 20000
+const TOTAL_VISITS = 600;      // nombre de sessions à simuler
+const MIN_DELAY_BETWEEN_PAGES = 15000; // ms (Base)
+const MAX_DELAY_BETWEEN_PAGES = 120000
 
 // ⚡️ VISITES RAPIDES (heures de pointe)
-const PEAK_MIN_DELAY = 5000;
-const PEAK_MAX_DELAY = 100000;
+const PEAK_MIN_DELAY = 15000;
+const PEAK_MAX_DELAY = 120000;
 
 // 🎲 VISITES SIMULTANÉES (par lot)
 const MIN_CONCURRENT_VISITS = 1;  // minimum de visites simultanées par lot
-const MAX_CONCURRENT_VISITS = 8;  // maximum de visites simultanées par lot
-const DELAY_BETWEEN_BATCHES_MIN = 100000;  // délai minimum entre les lots (ms)
-const DELAY_BETWEEN_BATCHES_MAX = 500000;  // délai maximum entre les lots (ms)
+const MAX_CONCURRENT_VISITS = 4;  // maximum de visites simultanées par lot
+const DELAY_BETWEEN_BATCHES_MIN = 5000;  // délai minimum entre les lots (ms)
+const DELAY_BETWEEN_BATCHES_MAX = 50000;  // délai maximum entre les lots (ms)
 
 // Mot de passe de la boutique (page protégée)
 const PASSWORD = "1";
