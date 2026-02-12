@@ -159,20 +159,20 @@ async function checkTimeAndGetDelay() {
     const currentHour = now.getHours();
 
     // ⛔️ 00h - 06h : PAUSE
-    // if (currentHour == 22 && currentHour < 2) {
-    //   console.log(`\n😴 Il est ${currentHour}h. Pause nuit jusqu'à 6h...`);
-    //   // Calcul du temps restant jusqu'à 06:00
-    //   const target = new Date(now);
-    //   target.setHours(6, 0, 0, 0);
-    //   if (target <= now) target.setDate(target.getDate() + 1); // cas limite
+    if (currentHour >= 1 && currentHour < 4) {
+      console.log(`\n😴 Il est ${currentHour}h. Pause nuit jusqu'à 6h...`);
+      // Calcul du temps restant jusqu'à 04:00
+      const target = new Date(now);
+      target.setHours(6, 0, 0, 0);
+      if (target <= now) target.setDate(target.getDate() + 1); // cas limite
 
-    //   const msToWait = target.getTime() - now.getTime();
-    //   console.log(`(Attente de ${(msToWait / 1000 / 60).toFixed(1)} minutes)`);
+      const msToWait = target.getTime() - now.getTime();
+      console.log(`(Attente de ${(msToWait / 1000 / 60).toFixed(1)} minutes)`);
 
-    //   await sleep(msToWait);
-    //   console.log("\n☀️ Bonjour ! Reprise des visites.");
-    //   continue; // on re-check l'heure après le réveil
-    // }
+      await sleep(msToWait);
+      console.log("\n☀️ Bonjour ! Reprise des visites.");
+      continue; // on re-check l'heure après le réveil
+    }
 
     // 🚀 11h-13h OU 16h-17h : MODE RAPIDE
     // Note: 13h exclu (donc 11h00 -> 12h59). 17h exclu (16h00 -> 16h59).
