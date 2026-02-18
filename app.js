@@ -16,7 +16,7 @@ const PATHS = [
 ];
 
 const TOTAL_VISITS = 1600;      // nombre de sessions à simuler
-const TOTAL_ORDERS = 25;         // nombre total de commandes à passer
+const TOTAL_ORDERS = 30;         // nombre total de commandes à passer
 const MIN_DELAY_BETWEEN_PAGES = 15000; // ms (Base)
 const MAX_DELAY_BETWEEN_PAGES = 120000;
 
@@ -515,17 +515,12 @@ async function checkTimeAndGetDelay() {
 
     // ⛔️ 01h - 04h : PAUSE
     if (currentHour >= 1 && currentHour < 4) {
-      console.log(`\n😴 Il est ${currentHour}h. Pause nuit jusqu'à 4h...`);
-      const target = new Date(now);
-      target.setHours(4, 0, 0, 0);
-      if (target <= now) target.setDate(target.getDate() + 1);
-
-      const msToWait = target.getTime() - now.getTime();
-      console.log(`(Attente de ${(msToWait / 1000 / 60).toFixed(1)} minutes)`);
-
-      await sleep(msToWait);
-      console.log("\n☀️ Bonjour ! Reprise des visites.");
-      continue;
+      return {
+        min: MIN_DELAY_BETWEEN_PAGES * 2,
+        max: MAX_DELAY_BETWEEN_PAGES * 2,
+        label: "🌙 NIGHT (Slow)",
+        isPeakTime: false,
+      };
     }
 
 
