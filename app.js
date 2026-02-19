@@ -15,8 +15,8 @@ const PATHS = [
   // "/products/yyy",
 ];
 
-const TOTAL_VISITS = 1600;      // nombre de sessions à simuler
-const TOTAL_ORDERS = 30;         // nombre total de commandes à passer
+const TOTAL_VISITS = 16000;      // nombre de sessions à simuler
+const TOTAL_ORDERS = 50;         // nombre total de commandes à passer
 const MIN_DELAY_BETWEEN_PAGES = 15000; // ms (Base)
 const MAX_DELAY_BETWEEN_PAGES = 120000;
 
@@ -24,11 +24,11 @@ const MAX_DELAY_BETWEEN_PAGES = 120000;
 const PEAK_MIN_DELAY = 5000;
 const PEAK_MAX_DELAY = 120000;
 
-// 🎲 VISITES SIMULTANÉES (par lot)
+// 🎲 VISITES SIMULTANÉES (par lot) 
 const MIN_CONCURRENT_VISITS = 1;
-const MAX_CONCURRENT_VISITS = 12;
+const MAX_CONCURRENT_VISITS = 25;
 const DELAY_BETWEEN_BATCHES_MIN = 5000;
-const DELAY_BETWEEN_BATCHES_MAX = 250000;   
+const DELAY_BETWEEN_BATCHES_MAX = 150000;   
 
 // 🛒 CONFIGURATION DES COMMANDES 
 const PROMO_CODE = "FREE"; 
