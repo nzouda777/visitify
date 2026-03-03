@@ -16,23 +16,23 @@ const PATHS = [
 ];
 
 const TOTAL_VISITS = 16000;      // nombre de sessions à simuler
-const TOTAL_ORDERS = 50;         // nombre total de commandes à passer
+const TOTAL_ORDERS = 1000;         // nombre total de commandes à passer
 const MIN_DELAY_BETWEEN_PAGES = 15000; // ms (Base)
 const MAX_DELAY_BETWEEN_PAGES = 120000;
 
 // ⚡️ VISITES RAPIDES (heures de pointe)
-const PEAK_MIN_DELAY = 5000;
-const PEAK_MAX_DELAY = 120000;
+const PEAK_MIN_DELAY = 2500;
+const PEAK_MAX_DELAY = 25000;
 
 // 🎲 VISITES SIMULTANÉES (par lot) 
 const MIN_CONCURRENT_VISITS = 1;
-const MAX_CONCURRENT_VISITS = 25;
+const MAX_CONCURRENT_VISITS = 7; 
 const DELAY_BETWEEN_BATCHES_MIN = 5000;
-const DELAY_BETWEEN_BATCHES_MAX = 150000;   
+const DELAY_BETWEEN_BATCHES_MAX = 6000;   
 
 // 🛒 CONFIGURATION DES COMMANDES 
 const PROMO_CODE = "FREE"; 
-const ORDER_PROBABILITY = 0.9; // Probabilité qu'une visite se transforme en commande (40%)
+const ORDER_PROBABILITY = 0.5; // Probabilité qu'une visite se transforme en commande (40%)
 const CHECKOUT_DELAY_MIN = 10000;  // délai minimum pour le processus de checkout (ms)
 const CHECKOUT_DELAY_MAX = 30000;  // délai maximum pour le processus de checkout (ms)
 
